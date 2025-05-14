@@ -293,7 +293,10 @@
         
         /* Progress steps */
         .progress-steps { 
-            @apply flex items-center justify-between w-full my-8; 
+            @apply flex items-center justify-between w-full my-6; 
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .step { 
@@ -302,14 +305,13 @@
         }
         
         .step-circle { 
-            @apply w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium; 
+            @apply w-8 h-8 flex items-center justify-center rounded-full; 
             transition: all 0.3s ease;
             cursor: pointer;
         }
         
         .step-active { 
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
             box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3), 0 2px 4px -2px rgba(79, 70, 229, 0.1);
         }
         
@@ -345,13 +347,19 @@
         }
         
         .check-icon { 
-            @apply w-4 h-4 fill-current; 
+            @apply w-4 h-4 fill-current text-white; 
         }
         
         .copy-btn-success { 
             background: linear-gradient(135deg, var(--success), #059669) !important;
-            color: white;
-            box-shadow: 0 1px 3px 0 rgba(16, 185, 129, 0.3), 0 1px 2px -1px rgba(16, 185, 129, 0.2);
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -1px rgba(16, 185, 129, 0.2) !important;
+            transform: translateY(-1px) !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        
+        .copy-btn-success svg {
+            animation: pulse 1s ease-in-out 1;
         }
         
         /* Animations */
@@ -483,7 +491,7 @@
 <body class="min-h-screen flex flex-col items-center py-8 sm:py-12 px-4">
     
     <div id="message-area" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 w-auto min-w-[300px] max-w-[90%] sm:max-w-md hidden">
-    </div>
+        </div>
 
     <div class="max-w-3xl w-full space-y-8">
         <header class="text-center mb-8">
@@ -509,22 +517,19 @@
                 所有操作均在浏览器本地执行，文件不会上传到服务器
             </div>
         </header>
-        
+
         <!-- Progress Indicator -->
         <div class="progress-steps">
             <div class="step">
-                <div id="step1-circle" class="step-circle step-active">1</div>
-                <span class="step-text">CSR 生成</span>
+                <div id="step1-circle" class="step-circle step-active"></div>
             </div>
             <div class="step-line" id="line1-2"></div>
             <div class="step">
-                <div id="step2-circle" class="step-inactive">2</div>
-                <span class="step-text">P12 生成</span>
+                <div id="step2-circle" class="step-inactive"></div>
             </div>
             <div class="step-line" id="line2-3"></div>
             <div class="step">
-                <div id="step3-circle" class="step-inactive">3</div>
-                <span class="step-text">Base64 编码</span>
+                <div id="step3-circle" class="step-inactive"></div>
             </div>
         </div>
 
@@ -539,13 +544,13 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label for="commonName" class="form-label">开发者名称 (Common Name):</label>
-                        <input type="text" id="commonName" name="commonName" class="form-input" placeholder="例如: My App Dev">
-                    </div>
-                    <div>
-                        <label for="emailAddress" class="form-label">邮箱地址:</label>
-                        <input type="email" id="emailAddress" name="emailAddress" class="form-input" placeholder="例如: developer@example.com">
+                <div>
+                    <label for="commonName" class="form-label">开发者名称 (Common Name):</label>
+                    <input type="text" id="commonName" name="commonName" class="form-input" placeholder="例如: My App Dev">
+                </div>
+                <div>
+                    <label for="emailAddress" class="form-label">邮箱地址:</label>
+                    <input type="email" id="emailAddress" name="emailAddress" class="form-input" placeholder="例如: developer@example.com">
                     </div>
                 </div>
                 <div>
@@ -613,33 +618,33 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label for="certificateFile" class="form-label">上传证书文件 (.cer):</label>
+                <div>
+                    <label for="certificateFile" class="form-label">上传证书文件 (.cer):</label>
                         <div id="certificateDropZone" class="drop-zone group">
-                            <input type="file" id="certificateFile" accept=".cer" class="hidden">
-                            <div class="drop-zone-text-container">
+                        <input type="file" id="certificateFile" accept=".cer" class="hidden">
+                        <div class="drop-zone-text-container">
                                 <svg class="mx-auto h-12 w-12 text-slate-400 group-hover:text-indigo-500 transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                                 <p class="mt-1 drop-zone-text">将 .cer 文件拖到此处，或 <span>点击选择文件</span></p>
-                                <p id="certificateFileName" class="drop-zone-subtext mt-1"></p>
-                            </div>
+                            <p id="certificateFileName" class="drop-zone-subtext mt-1"></p>
                         </div>
                     </div>
+                </div>
 
-                    <div>
+                <div>
                         <label for="privateKeyFile" class="form-label">上传私钥文件 (.key 或 .pem):</label>
                          <div id="privateKeyDropZone" class="drop-zone group">
-                            <input type="file" id="privateKeyFile" accept=".key,.pem" class="hidden">
-                             <div class="drop-zone-text-container">
+                        <input type="file" id="privateKeyFile" accept=".key,.pem" class="hidden">
+                         <div class="drop-zone-text-container">
                                 <svg class="mx-auto h-12 w-12 text-slate-400 group-hover:text-indigo-500 transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                                 <p class="mt-1 drop-zone-text">将 .key/.pem 文件拖到此处，或 <span>点击选择文件</span></p>
-                                <p id="privateKeyForP12FileName" class="drop-zone-subtext mt-1"></p>
-                            </div>
+                            <p id="privateKeyForP12FileName" class="drop-zone-subtext mt-1"></p>
                         </div>
                     </div>
+                </div>
                 </div>
                 
                 <button id="generateP12Btn" class="btn btn-primary w-full py-3.5 text-base font-medium">
@@ -710,7 +715,7 @@
                 </div>
                 <div id="base64ResultsContainer" class="output-container hidden space-y-4">
                     <!-- Results will be inserted here -->
-                </div>
+                    </div>
             </div>
         </section>
         <footer class="text-center mt-10 py-4 flex flex-col items-center">
@@ -739,7 +744,7 @@
             [step1Circle, step2Circle, step3Circle].forEach(circle => {
                 circle.classList.remove('step-active', 'step-complete', 'step-inactive');
                 circle.classList.add('step-inactive');
-                circle.innerHTML = circle.id.charAt(4);
+                circle.innerHTML = ''; // Remove any content
             });
             
             [line1_2, line2_3].forEach(line => {
@@ -785,20 +790,99 @@
         });
         
         goToStep3Btn?.addEventListener('click', () => {
-            updateProgressIndicator(3);
+            // Use the same approach as in processBase64Files to avoid checkmarks
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-inactive');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-inactive');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-active');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
+            
             section3.scrollIntoView({ behavior: 'smooth' });
         });
         
         // Click handlers for step indicators
         step1Circle.addEventListener('click', () => {
+            // Reset all steps to inactive
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-active');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-inactive');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-inactive');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
+            
             section1.scrollIntoView({ behavior: 'smooth' });
         });
         
         step2Circle.addEventListener('click', () => {
+            // Reset all steps to inactive, set step 2 to active
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-inactive');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-active');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-inactive');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
+            
             section2.scrollIntoView({ behavior: 'smooth' });
         });
         
         step3Circle.addEventListener('click', () => {
+            // Reset all steps to inactive, set step 3 to active
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-inactive');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-inactive');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-active');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
+            
             section3.scrollIntoView({ behavior: 'smooth' });
         });
 
@@ -887,9 +971,9 @@
             setTimeout(() => {
                 // Add animation for disappearing
                 messageArea.firstChild.classList.add('animate-disappear');
-                
-                setTimeout(() => {
-                    messageArea.classList.add('hidden');
+
+            setTimeout(() => {
+                messageArea.classList.add('hidden');
                     messageArea.innerHTML = '';
                 }, 300); // Match with CSS animation duration
             }, 4000);
@@ -942,28 +1026,28 @@
             
             try {
                 setTimeout(() => { // Simulate processing time
-                    const keys = forge.pki.rsa.generateKeyPair({ bits: 2048 });
-                    const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
-                    const csr = forge.pki.createCertificationRequest();
-                    csr.publicKey = keys.publicKey;
-                    const subject = [{ name: 'commonName', value: commonName }, { name: 'emailAddress', value: emailAddress }];
-                    if (countryName && countryName.length === 2) {
-                        subject.push({ name: 'countryName', value: countryName });
-                    } else if (countryName) {
-                        showMessage('info', '国家代码无效，已忽略。它应该是2个字母。');
-                    }
-                    csr.setSubject(subject);
-                    csr.sign(keys.privateKey, forge.md.sha256.create());
-                    const csrPem = forge.pki.certificationRequestToPem(csr);
-                    const csrFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'certificate'}.csr`;
-                    downloadFile(csrFilename, csrPem, 'application/pkcs10');
-                    document.getElementById('csrFileNameDisplay').textContent = `已下载: ${csrFilename}`;
-                    document.getElementById('csrDownloadLinkContainer').classList.remove('hidden');
-                    const privateKeyFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'private'}.key`;
-                    downloadFile(privateKeyFilename, privateKeyPem, 'application/x-pem-file');
-                    document.getElementById('privateKeyFileNameDisplay').textContent = `已下载: ${privateKeyFilename}`;
-                    document.getElementById('privateKeyDownloadLinkContainer').classList.remove('hidden');
-                    showMessage('success', 'CSR 和私钥文件已生成并开始下载！');
+                const keys = forge.pki.rsa.generateKeyPair({ bits: 2048 });
+                const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+                const csr = forge.pki.createCertificationRequest();
+                csr.publicKey = keys.publicKey;
+                const subject = [{ name: 'commonName', value: commonName }, { name: 'emailAddress', value: emailAddress }];
+                if (countryName && countryName.length === 2) {
+                    subject.push({ name: 'countryName', value: countryName });
+                } else if (countryName) {
+                    showMessage('info', '国家代码无效，已忽略。它应该是2个字母。');
+                }
+                csr.setSubject(subject);
+                csr.sign(keys.privateKey, forge.md.sha256.create());
+                const csrPem = forge.pki.certificationRequestToPem(csr);
+                const csrFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'certificate'}.csr`;
+                downloadFile(csrFilename, csrPem, 'application/pkcs10');
+                document.getElementById('csrFileNameDisplay').textContent = `已下载: ${csrFilename}`;
+                document.getElementById('csrDownloadLinkContainer').classList.remove('hidden');
+                const privateKeyFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'private'}.key`;
+                downloadFile(privateKeyFilename, privateKeyPem, 'application/x-pem-file');
+                document.getElementById('privateKeyFileNameDisplay').textContent = `已下载: ${privateKeyFilename}`;
+                document.getElementById('privateKeyDownloadLinkContainer').classList.remove('hidden');
+                showMessage('success', 'CSR 和私钥文件已生成并开始下载！');
                     
                     // Show the next step button
                     goToStep2Btn.classList.remove('hidden');
@@ -1134,10 +1218,10 @@
                 privateKeyPem = e_key.target.result;
                 
                 setTimeout(() => { // Add a slight delay for UX
-                    try {
-                        const certificateAsn1 = forge.asn1.fromDer(certificateContent);
-                        const certificate = forge.pki.certificateFromAsn1(certificateAsn1);
-                        const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+                try {
+                    const certificateAsn1 = forge.asn1.fromDer(certificateContent);
+                    const certificate = forge.pki.certificateFromAsn1(certificateAsn1);
+                    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
                         
                         if (!privateKey) { 
                             showMessage('error', '无法解析私钥文件。请确保它是有效的 PEM 格式 .key 或 .pem 文件。'); 
@@ -1153,10 +1237,10 @@
                             p12Password, 
                             { algorithm: 'pbeWithSHAAnd3KeyTripleDES', count: 50000 }
                         );
-                        const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
-                        downloadFile('certificate.p12', p12Der, 'application/x-pkcs12');
-                        document.getElementById('p12Output').classList.remove('hidden');
-                        showMessage('success', 'P12 文件已成功生成并开始下载。密码为 "123"。');
+                    const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
+                    downloadFile('certificate.p12', p12Der, 'application/x-pkcs12');
+                    document.getElementById('p12Output').classList.remove('hidden');
+                    showMessage('success', 'P12 文件已成功生成并开始下载。密码为 "123"。');
                         
                         // Update progress indicator
                         updateProgressIndicator(2);
@@ -1170,9 +1254,9 @@
                         generateP12Btn.innerHTML = originalBtnText;
                         generateP12Btn.disabled = false;
                         
-                    } catch (error) {
-                        console.error("P12 Generation Error:", error);
-                        let errMessage = `生成 P12 文件失败: ${error.message}. `;
+                } catch (error) {
+                    console.error("P12 Generation Error:", error);
+                    let errMessage = `生成 P12 文件失败: ${error.message}. `;
                         
                         if (error.message && error.message.includes("Invalid PEM")) {
                             errMessage += "请检查私钥文件格式。";
@@ -1188,7 +1272,7 @@
                             }, 2000);
                         }
                         
-                        showMessage('error', errMessage);
+                    showMessage('error', errMessage);
                         
                         // Restore button state
                         generateP12Btn.innerHTML = originalBtnText;
@@ -1235,7 +1319,7 @@
             if (isNewBatch) {
                 // Don't clear
             } else {
-                base64ResultsContainer.innerHTML = '';
+                 base64ResultsContainer.innerHTML = '';
             }
 
 
@@ -1251,8 +1335,25 @@
                 return;
             }
             
-            // Update progress indicator
-            updateProgressIndicator(3);
+            // Update active step indicator without showing green check marks for previous steps
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-inactive');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-inactive');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-active');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
             
             // Create processing indicator
             const processingIndicator = document.createElement('div');
@@ -1336,7 +1437,7 @@
                                     ${fileTypeBadge}
                                 </h5>
                                 <span class="ml-2 text-xs px-2 py-0.5 bg-slate-100 rounded-full text-slate-600">${(file.size / 1024).toFixed(2)} KB</span>
-                            </div>
+                        </div>
                             <button onclick="deleteBase64Result(this.parentNode.parentNode)" class="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" title="删除结果">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -1346,17 +1447,18 @@
                         <div class="relative">
                             <textarea id="${resultId}" rows="3" class="form-textarea mt-1 w-full text-xs font-mono" readonly>${base64String}</textarea>
                             <div class="absolute top-0 right-0 mt-1 mr-1">
-                                <button onclick="copyBase64ToClipboard('${resultId}', '${file.name}')" id="copyBtn-${resultId}" class="btn btn-secondary btn-sm" title="复制 Base64">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <button onclick="copyBase64ToClipboard('${resultId}', '${file.name}')" id="copyBtn-${resultId}" class="btn btn-primary btn-sm shadow-md px-3 py-2 flex items-center" title="复制 Base64">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
                                         <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
                                     </svg>
+                                    复制
                                 </button>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 mt-3">
-                            <button onclick="copyBase64ToClipboard('${resultId}', '${file.name}')" id="copyBtn-mobile-${resultId}" class="btn btn-secondary btn-sm flex items-center sm:hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <button onclick="copyBase64ToClipboard('${resultId}', '${file.name}')" id="copyBtn-mobile-${resultId}" class="btn btn-primary btn-sm flex items-center sm:hidden shadow-md px-4 py-2.5 text-base">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
                                     <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
                                 </svg>
@@ -1390,7 +1492,7 @@
                             processingIndicator.remove();
                         }
                         
-                        showMessage('success', `${files.length} 个文件已成功编码为 Base64。`);
+                         showMessage('success', `${files.length} 个文件已成功编码为 Base64。`);
                     }
                 };
                 
@@ -1402,20 +1504,20 @@
                     // Update the processing indicator
                     document.getElementById('processedCount').textContent = totalProcessed;
                     
-                    if (filesProcessedCount === files.length) {
+                     if (filesProcessedCount === files.length) {
                         // Remove processing indicator
                         const processingIndicator = document.getElementById('processingIndicator');
                         if (processingIndicator) {
                             processingIndicator.remove();
                         }
                         
-                        showMessage('info', `部分文件处理完成，部分失败。`, 'info');
+                         showMessage('info', `部分文件处理完成，部分失败。`, 'info');
                     }
                 };
                 
                 // Add a small delay between file processing for smoother UX
                 setTimeout(() => {
-                    reader.readAsArrayBuffer(file);
+                reader.readAsArrayBuffer(file);
                 }, i * 100);
             }
         }
@@ -1432,7 +1534,9 @@
         window.copyBase64ToClipboard = function(elementId, fileName) {
             const textarea = document.getElementById(elementId);
             const copyBtn = document.getElementById(`copyBtn-${elementId}`);
+            const mobileCopyBtn = document.getElementById(`copyBtn-mobile-${elementId}`);
             const originalBtnText = copyBtn.innerHTML;
+            const originalMobileBtnText = mobileCopyBtn ? mobileCopyBtn.innerHTML : '';
             
             if (!textarea) { 
                 showMessage('error', `无法找到 Base64 内容: ${elementId}`, 'copy'); 
@@ -1445,41 +1549,71 @@
             try {
                 document.execCommand('copy'); // Deprecated but common
                 
-                // Show success in the button
+                // Show success in the buttons
                 copyBtn.classList.add('copy-btn-success');
                 copyBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
-                    已复制
+                    已复制!
                 `;
                 
-                showMessage('success', `文件 "${fileName}" 的 Base64 已复制。`, 'copy');
+                if (mobileCopyBtn) {
+                    mobileCopyBtn.classList.add('copy-btn-success');
+                    mobileCopyBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        已复制!
+                    `;
+                }
                 
-                // Reset button after 2s
+                showMessage('success', `文件 "${fileName}" 的 Base64 已复制到剪贴板。`, 'copy');
+                
+                // Reset buttons after 2s
                 setTimeout(() => {
                     copyBtn.classList.remove('copy-btn-success');
                     copyBtn.innerHTML = originalBtnText;
+                    
+                    if (mobileCopyBtn) {
+                        mobileCopyBtn.classList.remove('copy-btn-success');
+                        mobileCopyBtn.innerHTML = originalMobileBtnText;
+                    }
                 }, 2000);
                 
             } catch (err) {
                 // Fallback for browsers that don't support execCommand or if it fails
                 navigator.clipboard.writeText(textarea.value).then(() => {
-                    // Show success in the button
+                    // Show success in the buttons
                     copyBtn.classList.add('copy-btn-success');
                     copyBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
-                        已复制 (fallback)
+                        已复制!
                     `;
                     
-                    showMessage('success', `文件 "${fileName}" 的 Base64 已复制 (fallback)。`, 'copy');
+                    if (mobileCopyBtn) {
+                        mobileCopyBtn.classList.add('copy-btn-success');
+                        mobileCopyBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            已复制!
+                        `;
+                    }
                     
-                    // Reset button after 2s
+                    showMessage('success', `文件 "${fileName}" 的 Base64 已复制到剪贴板。`, 'copy');
+                    
+                    // Reset buttons after 2s
                     setTimeout(() => {
                         copyBtn.classList.remove('copy-btn-success');
                         copyBtn.innerHTML = originalBtnText;
+                        
+                        if (mobileCopyBtn) {
+                            mobileCopyBtn.classList.remove('copy-btn-success');
+                            mobileCopyBtn.innerHTML = originalMobileBtnText;
+                        }
                     }, 2000);
                     
                 }).catch(clipErr => {
@@ -1543,7 +1677,26 @@
 
         document.addEventListener('DOMContentLoaded', (event) => {
             prefillStep1Inputs();
-            updateProgressIndicator(1);
+            
+            // Set step 1 as active without checkmarks
+            step1Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step1Circle.classList.add('step-active');
+            step1Circle.innerHTML = '';
+            
+            step2Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step2Circle.classList.add('step-inactive');
+            step2Circle.innerHTML = '';
+            
+            step3Circle.classList.remove('step-active', 'step-complete', 'step-inactive');
+            step3Circle.classList.add('step-inactive');
+            step3Circle.innerHTML = '';
+            
+            // Make the lines inactive
+            line1_2.classList.remove('step-line-active');
+            line1_2.classList.add('step-line-inactive');
+            
+            line2_3.classList.remove('step-line-active');
+            line2_3.classList.add('step-line-inactive');
         });
     </script>
 </body>
