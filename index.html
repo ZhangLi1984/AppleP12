@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple 证书 P12 生成器</title>
+    <title>Apple 证书 P12 与 Base64 工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
     <style>
@@ -14,6 +14,7 @@
         .btn { @apply px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2; }
         .btn-primary { @apply bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500; }
         .btn-secondary { @apply bg-gray-600 hover:bg-gray-700 focus:ring-gray-500; }
+        .btn-sm { @apply px-2 py-1 text-xs; }
         .info-box { @apply mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700 rounded-md; }
         .error-box { @apply mt-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-md; }
         .success-box { @apply mt-4 p-4 bg-green-50 border-l-4 border-green-400 text-green-700 rounded-md; }
@@ -21,13 +22,14 @@
         .drop-zone { @apply mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-indigo-500; }
         .drop-zone-active { @apply border-indigo-600 bg-indigo-50; }
         .drop-zone-text { @apply text-center text-gray-500; }
+        .base64-result-item { @apply mt-4 p-3 border border-gray-200 rounded-md bg-gray-50; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-2xl w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
         <div>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Apple 证书 P12 生成器
+                Apple 证书与 Base64 工具
             </h2>
         </div>
 
@@ -107,6 +109,29 @@
                 </div>
             </div>
         </div>
+
+        <div class="space-y-6 border border-gray-300 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-800">步骤 3: 文件 Base64 编码</h3>
+            <div class="info-box">
+                <p>上传一个或多个文件 (例如: <code>.p12</code>, <code>.mobileprovision</code>, <code>.txt</code> 等) 以生成其 Base64 编码字符串。</p>
+            </div>
+            <div>
+                <label for="base64Files" class="form-label">上传文件进行 Base64 编码:</label>
+                <div id="base64DropZone" class="drop-zone">
+                    <input type="file" id="base64FilesInput" multiple class="hidden">
+                    <div class="drop-zone-text">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-1 text-sm">将文件拖到此处，或 <span class="font-medium text-indigo-600 hover:text-indigo-500">点击选择文件</span> (可多选)</p>
+                        <p id="base64FileNames" class="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="base64ResultsContainer" class="output-container hidden">
+                </div>
+        </div>
+
     </div>
 
     <script>
@@ -121,7 +146,6 @@
             return result;
         }
         
-        // Generates a UUID v4
         function generateUUID() { 
             return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
                 (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -129,14 +153,12 @@
         }
 
         function generateRandomCommonName() {
-            // Use the first segment of a UUID as the prefix
             const uuid = generateUUID();
             const prefix = uuid.split('-')[0];
-            return `Dev-${prefix.toUpperCase()}`; // Adding a "Dev-" prefix for clarity and making it uppercase
+            return `Dev-${prefix.toUpperCase()}`;
         }
 
         function generateRandomEmail() {
-            // Updated list of common email domains
             const domains = [
                 "gmail.com", "163.com", "outlook.com", "yahoo.com", "icloud.com", 
                 "protonmail.com", "zoho.com", "aol.com", "yandex.com", "gmx.com"
@@ -149,15 +171,12 @@
             return generateRandomString(2, characters);
         }
 
-        // --- Function to prefill Step 1 inputs ---
         function prefillStep1Inputs() {
             document.getElementById('commonName').value = generateRandomCommonName();
             document.getElementById('emailAddress').value = generateRandomEmail();
             document.getElementById('countryName').value = generateRandomCountryCode();
         }
 
-
-        // --- File Download Helper ---
         function downloadFile(filename, content, mimeType) {
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
@@ -170,7 +189,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- Message Handling ---
         function showMessage(type, text) {
             const messageArea = document.getElementById('message-area');
             let boxClass = '';
@@ -183,13 +201,10 @@
             messageArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
             setTimeout(() => {
                 messageArea.classList.add('hidden');
-            }, 7000); // Increased timeout for file download messages
+            }, 7000);
         }
         
-        // --- CSR and Private Key Generation and Download ---
         document.getElementById('generateCsrBtn').addEventListener('click', () => {
-            // Values are now pre-filled on load, and also when this button is clicked
-            // to ensure fresh random values if the user clicks multiple times without reloading.
             prefillStep1Inputs(); 
             
             const commonName = document.getElementById('commonName').value.trim();
@@ -220,14 +235,11 @@
                 csr.sign(keys.privateKey, forge.md.sha256.create());
                 const csrPem = forge.pki.certificationRequestToPem(csr);
 
-                // Offer CSR for download
                 const csrFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'certificate'}.csr`;
                 downloadFile(csrFilename, csrPem, 'application/pkcs10');
                 document.getElementById('csrFileNameDisplay').textContent = `CSR 文件: ${csrFilename}`;
                 document.getElementById('csrDownloadLinkContainer').classList.remove('hidden');
 
-
-                // Offer Private Key for download
                 const privateKeyFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'private'}.key`;
                 downloadFile(privateKeyFilename, privateKeyPem, 'application/x-pem-file');
                 document.getElementById('privateKeyFileNameDisplay').textContent = `私钥文件: ${privateKeyFilename}`;
@@ -241,8 +253,7 @@
             }
         });
 
-        // --- Drag and Drop Functionality ---
-        function setupDropZone(dropZoneElement, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension = null) {
+        function setupDropZone(dropZoneElement, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension = null, allowMultiple = false) {
             dropZoneElement.addEventListener('click', () => fileInputElement.click());
 
             dropZoneElement.addEventListener('dragover', (e) => {
@@ -258,57 +269,85 @@
                 e.preventDefault();
                 dropZoneElement.classList.remove('drop-zone-active');
                 const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    const file = files[0];
-                    if (file.name.endsWith(expectedExtension) || (secondaryExtension && file.name.endsWith(secondaryExtension))) {
-                        fileInputElement.files = files; // Assign dropped file to the input
-                        fileNameDisplayElement.textContent = file.name;
-                         showMessage('success', `${file.name} 已选择。`);
-                    } else {
-                        const validExtensions = secondaryExtension ? `${expectedExtension} 或 ${secondaryExtension}` : expectedExtension;
-                        showMessage('error', `文件类型无效。请上传 ${validExtensions} 文件。`);
-                        fileNameDisplayElement.textContent = '';
-                        fileInputElement.value = ''; // Clear the input
-                    }
-                }
+                handleFiles(files, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension, allowMultiple);
             });
 
             fileInputElement.addEventListener('change', (e) => {
                 const files = e.target.files;
-                if (files.length > 0) {
-                    const file = files[0];
-                     if (file.name.endsWith(expectedExtension) || (secondaryExtension && file.name.endsWith(secondaryExtension))) {
-                        fileNameDisplayElement.textContent = file.name;
-                        showMessage('success', `${file.name} 已选择。`);
-                    } else {
-                        const validExtensions = secondaryExtension ? `${expectedExtension} 或 ${secondaryExtension}` : expectedExtension;
-                        showMessage('error', `文件类型无效。请选择 ${validExtensions} 文件。`);
-                        fileNameDisplayElement.textContent = '';
-                        e.target.value = ''; // Clear the input
-                    }
-                } else {
-                     fileNameDisplayElement.textContent = '';
-                }
+                handleFiles(files, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension, allowMultiple);
             });
         }
+        
+        function handleFiles(files, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension, allowMultiple) {
+            if (files.length > 0) {
+                if (!allowMultiple && files.length > 1) {
+                    showMessage('error', '此区域只允许上传单个文件。');
+                    fileNameDisplayElement.textContent = '';
+                    fileInputElement.value = ''; 
+                    return;
+                }
+
+                let allFilesValid = true;
+                let displayFileNames = [];
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (expectedExtension === '*' || file.name.endsWith(expectedExtension) || (secondaryExtension && file.name.endsWith(secondaryExtension))) {
+                        displayFileNames.push(file.name);
+                    } else {
+                        allFilesValid = false;
+                        const validExtensions = (expectedExtension === '*') ? "任何文件类型" : (secondaryExtension ? `${expectedExtension} 或 ${secondaryExtension}` : expectedExtension);
+                        showMessage('error', `文件 "${file.name}" 类型无效。请上传 ${validExtensions} 文件。`);
+                        break; 
+                    }
+                }
+
+                if (allFilesValid) {
+                    fileInputElement.files = files; // Assign (potentially multiple) files to the input
+                    fileNameDisplayElement.textContent = displayFileNames.join(', ');
+                    if (fileInputElement.id === 'base64FilesInput') { // Trigger Base64 encoding for the new module
+                        processBase64Files(files);
+                    } else {
+                        showMessage('success', `${displayFileNames.join(', ')} 已选择。`);
+                    }
+                } else {
+                    fileNameDisplayElement.textContent = '';
+                    fileInputElement.value = ''; // Clear the input if any file is invalid
+                }
+            } else {
+                 fileNameDisplayElement.textContent = '';
+            }
+        }
+
 
         setupDropZone(
             document.getElementById('certificateDropZone'),
             document.getElementById('certificateFile'),
             document.getElementById('certificateFileName'),
-            '.cer'
+            '.cer',
+            null,
+            false // Single file for certificate
         );
 
         setupDropZone(
             document.getElementById('privateKeyDropZone'),
             document.getElementById('privateKeyFile'),
             document.getElementById('privateKeyForP12FileName'),
-            '.key', // Primary expected extension
-            '.pem'  // Also accept .pem for flexibility
+            '.key', 
+            '.pem',
+            false // Single file for private key
+        );
+        
+        // Setup for Base64 Drop Zone (Module 3)
+        setupDropZone(
+            document.getElementById('base64DropZone'),
+            document.getElementById('base64FilesInput'),
+            document.getElementById('base64FileNames'),
+            '*', // Allow any file type for base64 encoding
+            null,
+            true // Allow multiple files
         );
 
-
-        // --- P12 Generation ---
         document.getElementById('generateP12Btn').addEventListener('click', () => {
             const certificateFile = document.getElementById('certificateFile').files[0];
             const privateKeyFile = document.getElementById('privateKeyFile').files[0];
@@ -325,70 +364,117 @@
 
             const certReader = new FileReader();
             const keyReader = new FileReader();
-
             let certificateContent, privateKeyPem;
 
             certReader.onload = function(e_cert) {
-                certificateContent = e_cert.target.result; // This will be ArrayBuffer
-                // Now read the key file
-                keyReader.readAsText(privateKeyFile); // Read private key as text (PEM)
+                certificateContent = e_cert.target.result;
+                keyReader.readAsText(privateKeyFile);
             };
-            certReader.onerror = function() {
-                showMessage('error', '读取证书文件失败。');
-            };
+            certReader.onerror = function() { showMessage('error', '读取证书文件失败。'); };
             
             keyReader.onload = function(e_key) {
                 privateKeyPem = e_key.target.result;
-                
-                // Both files are read, proceed to P12 generation
                 try {
-                    const certificateAsn1 = forge.asn1.fromDer(certificateContent); // certificateContent is ArrayBuffer
+                    const certificateAsn1 = forge.asn1.fromDer(certificateContent);
                     const certificate = forge.pki.certificateFromAsn1(certificateAsn1);
-                    
                     const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
 
                     if (!privateKey) {
                          showMessage('error', '无法解析私钥文件。请确保它是有效的 PEM 格式 .key 或 .pem 文件。');
                          return;
                     }
-
-                    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(
-                        privateKey,
-                        certificate,
-                        p12Password,
-                        {
-                            algorithm: 'pbeWithSHAAnd3KeyTripleDES', 
-                            count: 50000, 
-                        }
-                    );
-
+                    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(privateKey, certificate, p12Password, { algorithm: 'pbeWithSHAAnd3KeyTripleDES', count: 50000 });
                     const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
-                    
                     downloadFile('certificate.p12', p12Der, 'application/x-pkcs12');
-
                     document.getElementById('p12Output').classList.remove('hidden');
                     showMessage('success', 'P12 文件已成功生成并开始下载。密码为 "123"。');
-
                 } catch (error) {
                     console.error("P12 Generation Error:", error);
                     let errorMessage = `生成 P12 文件失败: ${error.message}. `;
-                    if (error.message && error.message.includes("Invalid PEM")) {
-                        errorMessage += "请检查私钥文件格式是否正确。";
-                    } else if (error.message && error.message.includes("decode") || error.message.includes("DER")) {
-                         errorMessage += "请检查 .cer 文件是否为有效的 DER 编码证书。";
-                    }
+                    if (error.message && error.message.includes("Invalid PEM")) errorMessage += "请检查私钥文件格式是否正确。";
+                    else if (error.message && (error.message.includes("decode") || error.message.includes("DER"))) errorMessage += "请检查 .cer 文件是否为有效的 DER 编码证书。";
                     showMessage('error', errorMessage);
                 }
             };
-            keyReader.onerror = function() {
-                showMessage('error', '读取私钥文件失败。');
-            };
-
-            // Start reading the certificate file first
-            certReader.readAsArrayBuffer(certificateFile); // Read .cer as ArrayBuffer (DER)
+            keyReader.onerror = function() { showMessage('error', '读取私钥文件失败。'); };
+            certReader.readAsArrayBuffer(certificateFile);
         });
 
-        // --- Prefill inputs on page load ---
+        // --- Base64 Encoding Functionality (Module 3) ---
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function processBase64Files(files) {
+            const resultsContainer = document.getElementById('base64ResultsContainer');
+            resultsContainer.innerHTML = ''; // Clear previous results
+            resultsContainer.classList.remove('hidden');
+            let filesProcessed = 0;
+
+            if (files.length === 0) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+            
+            showMessage('info', `正在处理 ${files.length} 个文件...`);
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const base64String = arrayBufferToBase64(e.target.result);
+                    const resultId = `base64-${file.name.replace(/[^a-zA-Z0-9]/g, '')}-${i}`; // Unique ID for textarea
+
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'base64-result-item';
+                    resultItem.innerHTML = `
+                        <h5 class="font-medium text-gray-800">${file.name} (${(file.size / 1024).toFixed(2)} KB)</h5>
+                        <textarea id="${resultId}" rows="3" class="form-textarea mt-2 w-full" readonly>${base64String}</textarea>
+                        <button onclick="copyBase64ToClipboard('${resultId}', '${file.name}')" class="btn btn-secondary btn-sm mt-2">复制 Base64</button>
+                    `;
+                    resultsContainer.appendChild(resultItem);
+                    filesProcessed++;
+                    if (filesProcessed === files.length) {
+                         showMessage('success', `${files.length} 个文件已成功编码为 Base64。`);
+                    }
+                };
+                reader.onerror = function() {
+                    showMessage('error', `读取文件 "${file.name}" 失败。`);
+                    filesProcessed++;
+                     if (filesProcessed === files.length) {
+                         showMessage('info', `部分文件处理完成，部分失败。`);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        // Make this function globally accessible for the inline onclick
+        window.copyBase64ToClipboard = function(elementId, fileName) {
+            const textarea = document.getElementById(elementId);
+            if (!textarea) {
+                showMessage('error', `无法找到 Base64 内容区域: ${elementId}`);
+                return;
+            }
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showMessage('success', `文件 "${fileName}" 的 Base64 已复制到剪贴板。`);
+            } catch (err) {
+                showMessage('error', `复制失败: ${err}`);
+            }
+            // Deselect
+            window.getSelection().removeAllRanges();
+        }
+
+
         document.addEventListener('DOMContentLoaded', (event) => {
             prefillStep1Inputs();
         });
