@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple 证书 P12 生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .form-label { @apply block text-sm font-medium text-gray-700 mb-1; }
+        .form-input { @apply mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
+        .form-textarea { @apply mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm resize-none; }
+        .btn { @apply px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2; }
+        .btn-primary { @apply bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500; }
+        .btn-secondary { @apply bg-gray-600 hover:bg-gray-700 focus:ring-gray-500; }
+        .info-box { @apply mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700 rounded-md; }
+        .error-box { @apply mt-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-md; }
+        .success-box { @apply mt-4 p-4 bg-green-50 border-l-4 border-green-400 text-green-700 rounded-md; }
+        .output-container { @apply mt-4 p-4 border border-gray-200 rounded-md bg-white; }
+        .drop-zone { @apply mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-indigo-500; }
+        .drop-zone-active { @apply border-indigo-600 bg-indigo-50; }
+        .drop-zone-text { @apply text-center text-gray-500; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Apple 证书 P12 生成器
+            </h2>
+        </div>
+
+        <div id="message-area" class="hidden"></div>
+
+        <div class="space-y-6 border border-gray-300 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-800">步骤 1: 生成证书签名请求 (CSR) 和私钥</h3>
+            <div>
+                <label for="commonName" class="form-label">开发者名称 (Common Name):</label>
+                <input type="text" id="commonName" name="commonName" class="form-input" placeholder="例如: John Doe">
+            </div>
+            <div>
+                <label for="emailAddress" class="form-label">邮箱地址:</label>
+                <input type="email" id="emailAddress" name="emailAddress" class="form-input" placeholder="例如: developer@example.com">
+            </div>
+            <div>
+                <label for="countryName" class="form-label">国家代码 (2字母, 可选):</label>
+                <input type="text" id="countryName" name="countryName" class="form-input" placeholder="例如: US, CN" maxlength="2">
+            </div>
+            <button id="generateCsrBtn" class="btn btn-primary w-full">生成并下载 CSR 和私钥</button>
+
+            <div id="csrDownloadLinkContainer" class="hidden output-container">
+                <h4 class="font-medium text-gray-700">证书签名请求 (CSR):</h4>
+                <p id="csrFileNameDisplay" class="text-sm text-gray-600"></p>
+                <div class="info-box">
+                    <p class="font-bold">重要提示:</p>
+                    <p>CSR 文件已准备好下载。请访问您的 Apple Developer 账户，在 "Certificates, Identifiers & Profiles" 部分创建一个新的证书，并上传此 CSR 文件。</p>
+                </div>
+            </div>
+            <div id="privateKeyDownloadLinkContainer" class="hidden output-container">
+                <h4 class="font-medium text-gray-700">私钥 (Private Key):</h4>
+                <p id="privateKeyFileNameDisplay" class="text-sm text-gray-600"></p>
+                 <div class="info-box !bg-yellow-50 !border-yellow-400 !text-yellow-700">
+                    <p class="font-bold">⚠️ 安全警告:</p>
+                    <p>私钥文件已准备好下载。请务必将其保存在安全的地方。您将在步骤 2 中需要它来生成 P12 文件。不要与任何人分享此密钥。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6 border border-gray-300 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-800">步骤 2: 生成 P12 文件</h3>
+            <div class="info-box">
+                <p>在 Apple Developer Portal 使用步骤 1 生成的 CSR 创建并下载证书 (`.cer` 文件) 后，请在此处上传该 `.cer` 文件和您在步骤 1 中下载的私钥文件 (`.key` 文件)。</p>
+            </div>
+            
+            <div>
+                <label for="certificateFile" class="form-label">上传证书文件 (.cer):</label>
+                <div id="certificateDropZone" class="drop-zone">
+                    <input type="file" id="certificateFile" accept=".cer" class="hidden">
+                    <div class="drop-zone-text">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-1 text-sm">将 .cer 文件拖到此处，或 <span class="font-medium text-indigo-600 hover:text-indigo-500">点击选择文件</span></p>
+                        <p id="certificateFileName" class="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="privateKeyFile" class="form-label">上传私钥文件 (.key 来自步骤 1):</label>
+                 <div id="privateKeyDropZone" class="drop-zone">
+                    <input type="file" id="privateKeyFile" accept=".key,.pem" class="hidden">
+                     <div class="drop-zone-text">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-1 text-sm">将 .key 文件拖到此处，或 <span class="font-medium text-indigo-600 hover:text-indigo-500">点击选择文件</span></p>
+                        <p id="privateKeyForP12FileName" class="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+            <button id="generateP12Btn" class="btn btn-primary w-full">生成 P12 文件</button>
+            <div id="p12Output" class="hidden output-container">
+                 <div class="info-box">
+                    <p><span class="font-bold">P12 文件已生成。</span> 密码固定为: <strong>123</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const forge = window.forge;
+
+        // --- Helper functions for random data generation ---
+        function generateRandomString(length, characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+        
+        // Generates a UUID v4
+        function generateUUID() { 
+            return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+
+        function generateRandomCommonName() {
+            // Use the first segment of a UUID as the prefix
+            const uuid = generateUUID();
+            const prefix = uuid.split('-')[0];
+            return `Dev-${prefix.toUpperCase()}`; // Adding a "Dev-" prefix for clarity and making it uppercase
+        }
+
+        function generateRandomEmail() {
+            // Updated list of common email domains
+            const domains = [
+                "gmail.com", "163.com", "outlook.com", "yahoo.com", "icloud.com", 
+                "protonmail.com", "zoho.com", "aol.com", "yandex.com", "gmx.com"
+            ];
+            return `user${Math.floor(Math.random() * 100000)}@${domains[Math.floor(Math.random() * domains.length)]}`;
+        }
+
+        function generateRandomCountryCode() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            return generateRandomString(2, characters);
+        }
+
+        // --- Function to prefill Step 1 inputs ---
+        function prefillStep1Inputs() {
+            document.getElementById('commonName').value = generateRandomCommonName();
+            document.getElementById('emailAddress').value = generateRandomEmail();
+            document.getElementById('countryName').value = generateRandomCountryCode();
+        }
+
+
+        // --- File Download Helper ---
+        function downloadFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Message Handling ---
+        function showMessage(type, text) {
+            const messageArea = document.getElementById('message-area');
+            let boxClass = '';
+            if (type === 'error') boxClass = 'error-box';
+            else if (type === 'success') boxClass = 'success-box';
+            else boxClass = 'info-box';
+            
+            messageArea.innerHTML = `<div class="${boxClass}"><p>${text}</p></div>`;
+            messageArea.classList.remove('hidden');
+            messageArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                messageArea.classList.add('hidden');
+            }, 7000); // Increased timeout for file download messages
+        }
+        
+        // --- CSR and Private Key Generation and Download ---
+        document.getElementById('generateCsrBtn').addEventListener('click', () => {
+            // Values are now pre-filled on load, and also when this button is clicked
+            // to ensure fresh random values if the user clicks multiple times without reloading.
+            prefillStep1Inputs(); 
+            
+            const commonName = document.getElementById('commonName').value.trim();
+            const emailAddress = document.getElementById('emailAddress').value.trim();
+            const countryName = document.getElementById('countryName').value.trim().toUpperCase();
+
+            if (!commonName || !emailAddress) {
+                showMessage('error', '开发者名称和邮箱地址不能为空。');
+                return;
+            }
+
+            try {
+                const keys = forge.pki.rsa.generateKeyPair({ bits: 2048 });
+                const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+                const csr = forge.pki.createCertificationRequest();
+                csr.publicKey = keys.publicKey;
+                
+                const subject = [
+                    { name: 'commonName', value: commonName },
+                    { name: 'emailAddress', value: emailAddress }
+                ];
+                if (countryName && countryName.length === 2) {
+                    subject.push({ name: 'countryName', value: countryName });
+                } else if (countryName) {
+                    showMessage('info', '国家代码无效，已忽略。它应该是2个字母。');
+                }
+                csr.setSubject(subject);
+                csr.sign(keys.privateKey, forge.md.sha256.create());
+                const csrPem = forge.pki.certificationRequestToPem(csr);
+
+                // Offer CSR for download
+                const csrFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'certificate'}.csr`;
+                downloadFile(csrFilename, csrPem, 'application/pkcs10');
+                document.getElementById('csrFileNameDisplay').textContent = `CSR 文件: ${csrFilename}`;
+                document.getElementById('csrDownloadLinkContainer').classList.remove('hidden');
+
+
+                // Offer Private Key for download
+                const privateKeyFilename = `${commonName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') || 'private'}.key`;
+                downloadFile(privateKeyFilename, privateKeyPem, 'application/x-pem-file');
+                document.getElementById('privateKeyFileNameDisplay').textContent = `私钥文件: ${privateKeyFilename}`;
+                document.getElementById('privateKeyDownloadLinkContainer').classList.remove('hidden');
+                
+                showMessage('success', 'CSR 和私钥文件已生成并开始下载！请务必安全保存私钥文件。');
+
+            } catch (error) {
+                console.error("CSR Generation Error:", error);
+                showMessage('error', `生成 CSR/私钥失败: ${error.message}`);
+            }
+        });
+
+        // --- Drag and Drop Functionality ---
+        function setupDropZone(dropZoneElement, fileInputElement, fileNameDisplayElement, expectedExtension, secondaryExtension = null) {
+            dropZoneElement.addEventListener('click', () => fileInputElement.click());
+
+            dropZoneElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZoneElement.classList.add('drop-zone-active');
+            });
+
+            dropZoneElement.addEventListener('dragleave', () => {
+                dropZoneElement.classList.remove('drop-zone-active');
+            });
+
+            dropZoneElement.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZoneElement.classList.remove('drop-zone-active');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith(expectedExtension) || (secondaryExtension && file.name.endsWith(secondaryExtension))) {
+                        fileInputElement.files = files; // Assign dropped file to the input
+                        fileNameDisplayElement.textContent = file.name;
+                         showMessage('success', `${file.name} 已选择。`);
+                    } else {
+                        const validExtensions = secondaryExtension ? `${expectedExtension} 或 ${secondaryExtension}` : expectedExtension;
+                        showMessage('error', `文件类型无效。请上传 ${validExtensions} 文件。`);
+                        fileNameDisplayElement.textContent = '';
+                        fileInputElement.value = ''; // Clear the input
+                    }
+                }
+            });
+
+            fileInputElement.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                     if (file.name.endsWith(expectedExtension) || (secondaryExtension && file.name.endsWith(secondaryExtension))) {
+                        fileNameDisplayElement.textContent = file.name;
+                        showMessage('success', `${file.name} 已选择。`);
+                    } else {
+                        const validExtensions = secondaryExtension ? `${expectedExtension} 或 ${secondaryExtension}` : expectedExtension;
+                        showMessage('error', `文件类型无效。请选择 ${validExtensions} 文件。`);
+                        fileNameDisplayElement.textContent = '';
+                        e.target.value = ''; // Clear the input
+                    }
+                } else {
+                     fileNameDisplayElement.textContent = '';
+                }
+            });
+        }
+
+        setupDropZone(
+            document.getElementById('certificateDropZone'),
+            document.getElementById('certificateFile'),
+            document.getElementById('certificateFileName'),
+            '.cer'
+        );
+
+        setupDropZone(
+            document.getElementById('privateKeyDropZone'),
+            document.getElementById('privateKeyFile'),
+            document.getElementById('privateKeyForP12FileName'),
+            '.key', // Primary expected extension
+            '.pem'  // Also accept .pem for flexibility
+        );
+
+
+        // --- P12 Generation ---
+        document.getElementById('generateP12Btn').addEventListener('click', () => {
+            const certificateFile = document.getElementById('certificateFile').files[0];
+            const privateKeyFile = document.getElementById('privateKeyFile').files[0];
+            const p12Password = "123";
+
+            if (!certificateFile) {
+                showMessage('error', '请上传 .cer 证书文件。');
+                return;
+            }
+            if (!privateKeyFile) {
+                showMessage('error', '请上传您的 .key 或 .pem 私钥文件。');
+                return;
+            }
+
+            const certReader = new FileReader();
+            const keyReader = new FileReader();
+
+            let certificateContent, privateKeyPem;
+
+            certReader.onload = function(e_cert) {
+                certificateContent = e_cert.target.result; // This will be ArrayBuffer
+                // Now read the key file
+                keyReader.readAsText(privateKeyFile); // Read private key as text (PEM)
+            };
+            certReader.onerror = function() {
+                showMessage('error', '读取证书文件失败。');
+            };
+            
+            keyReader.onload = function(e_key) {
+                privateKeyPem = e_key.target.result;
+                
+                // Both files are read, proceed to P12 generation
+                try {
+                    const certificateAsn1 = forge.asn1.fromDer(certificateContent); // certificateContent is ArrayBuffer
+                    const certificate = forge.pki.certificateFromAsn1(certificateAsn1);
+                    
+                    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+
+                    if (!privateKey) {
+                         showMessage('error', '无法解析私钥文件。请确保它是有效的 PEM 格式 .key 或 .pem 文件。');
+                         return;
+                    }
+
+                    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(
+                        privateKey,
+                        certificate,
+                        p12Password,
+                        {
+                            algorithm: 'pbeWithSHAAnd3KeyTripleDES', 
+                            count: 50000, 
+                        }
+                    );
+
+                    const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
+                    
+                    downloadFile('certificate.p12', p12Der, 'application/x-pkcs12');
+
+                    document.getElementById('p12Output').classList.remove('hidden');
+                    showMessage('success', 'P12 文件已成功生成并开始下载。密码为 "123"。');
+
+                } catch (error) {
+                    console.error("P12 Generation Error:", error);
+                    let errorMessage = `生成 P12 文件失败: ${error.message}. `;
+                    if (error.message && error.message.includes("Invalid PEM")) {
+                        errorMessage += "请检查私钥文件格式是否正确。";
+                    } else if (error.message && error.message.includes("decode") || error.message.includes("DER")) {
+                         errorMessage += "请检查 .cer 文件是否为有效的 DER 编码证书。";
+                    }
+                    showMessage('error', errorMessage);
+                }
+            };
+            keyReader.onerror = function() {
+                showMessage('error', '读取私钥文件失败。');
+            };
+
+            // Start reading the certificate file first
+            certReader.readAsArrayBuffer(certificateFile); // Read .cer as ArrayBuffer (DER)
+        });
+
+        // --- Prefill inputs on page load ---
+        document.addEventListener('DOMContentLoaded', (event) => {
+            prefillStep1Inputs();
+        });
+    </script>
+</body>
+</html>
